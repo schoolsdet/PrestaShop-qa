@@ -50,14 +50,17 @@ jobs:
         run: mv ./*.zip ./${{ github.event.release.tag_name }}.zip
         working-directory: ${{ env.RELEASE_DIR }}
 
-      - name: cleanup upload directory
+      - name: Prepare directories
         uses: appleboy/ssh-action@v0.1.5
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           password: ${{ secrets.PASSWORD }}
+          script_stop: true
           port: ${{ secrets.PORT }}
-          script: rm -rf ${{ env.RELEASE_DIR }} && mkdir -p ${{ env.RELEASE_DIR }}
+          script: |
+            rm -rf ${{ env.RELEASE_DIR }}
+            mkdir -p ${{ env.RELEASE_DIR }}
 
       - name: Copy single file to remote
         uses: garygrossgarten/github-action-scp@release
@@ -67,6 +70,21 @@ jobs:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           password: ${{ secrets.PASSWORD }}
+
+      - name: cleanup upload directory
+        uses: appleboy/ssh-action@v0.1.5
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          password: ${{ secrets.PASSWORD }}
+          port: ${{ secrets.PORT }}
+          script_stop: true
+          script: |
+            cd ${{ env.RELEASE_DIR }}
+            mkdir -p /var/www/html/prestashop
+            unzip -o ${{ github.event.release.tag_name }}.zip /var/www/html/prestashop
+            chown -R www-data:www-data /var/www/html/prestashop/
+            chmod -R 755 /var/www/html/prestashop
 
       - name: Release
         uses: softprops/action-gh-release@v1
