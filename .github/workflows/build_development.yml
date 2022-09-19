@@ -68,7 +68,7 @@ jobs:
           port: ${{ secrets.PORT }}
           strip_components: 2
           source: ${{ env.RELEASE_DIR }}/${{ github.event.release.tag_name }}.zip
-          target: ${{ env.RELEASE_DIR }}
+          target: /tmp/
 
       - name: Release
         uses: softprops/action-gh-release@v1
