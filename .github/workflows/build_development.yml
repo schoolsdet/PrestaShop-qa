@@ -85,6 +85,7 @@ jobs:
             unzip -o ${{ github.event.release.tag_name }}.zip /var/www/html/prestashop
             chown -R www-data:www-data /var/www/html/prestashop/
             chmod -R 755 /var/www/html/prestashop
+            /etc/init.d/apache2 reload
 
       - name: Release
         uses: softprops/action-gh-release@v1
