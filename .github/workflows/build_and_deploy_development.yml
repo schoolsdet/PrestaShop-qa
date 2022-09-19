@@ -72,7 +72,7 @@ jobs:
           password: ${{ secrets.PASSWORD }}
 
       # https://devdocs.prestashop-project.org/1.7/basics/keeping-up-to-date/upgrade/
-      - name: cleanup upload directory
+      - name: Overwrite files
         uses: appleboy/ssh-action@v0.1.5
         with:
           host: ${{ secrets.HOST }}
@@ -92,7 +92,8 @@ jobs:
             rm -rf /var/www/html/prestashop/vendor/
             cp -R ./* /var/www/html/prestashop
             cd /var/www/html/prestashop
-            php install/upgrade/upgrade.php
+            chown -R www-data:www-data /var/www/html/prestashop/
+            chmod -R 755 /var/www/html/prestashop
             rm -rf /var/www/html/prestashop/install/
 
       - name: Release
