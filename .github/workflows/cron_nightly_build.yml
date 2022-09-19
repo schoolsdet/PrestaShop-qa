@@ -2,12 +2,11 @@
 name: Nightly Build
 
 on:
-  schedule:
-    - cron: '0 1 * * *'
-  workflow_dispatch:
+  release:
+    types: [published]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   nightly-build:
@@ -15,28 +14,11 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    strategy:
-      fail-fast: false
-      matrix:
-        BRANCH:
-          - develop
-          - 8.0.x
-          - 1.7.8.x
-        include:
-          - BRANCH: develop
-            node: 16
-          - BRANCH: 8.0.x
-            node: 16
-          - BRANCH: 1.7.8.x
-            node: 14
-
     env:
       PHP_VERSION: '7.4'
-      NODE_VERSION: ${{ matrix.node }}
+      NODE_VERSION: '16'
       RELEASE_DIR: '/tmp/ps-release'
-      GH_BRANCH: ${{ matrix.BRANCH }}
-      GC_PROJECT_ID: ${{ secrets.GC_PROJECT_ID }}
-      GC_SERVICE_KEY: ${{ secrets.GC_SERVICE_KEY }}
+      GH_BRANCH: 'develop'
 
     steps:
       - uses: actions/checkout@v2
@@ -65,14 +47,11 @@ jobs:
         run: php tools/build/CreateRelease.php --destination-dir=${{ env.RELEASE_DIR }}
 
       - name: Rename build
-        run: today=`date +%Y-%m-%d-`; for i in *; do mv $i $today$GH_BRANCH-$i; done
+        run: mv ./*.zip ./${{ github.event.release.tag_name }}.zip
         working-directory: ${{ env.RELEASE_DIR }}
 
-      - uses: google-github-actions/setup-gcloud@v0
-        name: Setup Cloud Sdk
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
         with:
-          service_account_key: ${{ env.GC_SERVICE_KEY }}
-          project_id: ${{ env.GC_PROJECT_ID }}
-
-      - name: Upload to Google Cloud Storage (GCS)
-        run: gsutil cp -r "${{ env.RELEASE_DIR }}/**" gs://prestashop-core-nightly
+          files: ${{ env.RELEASE_DIR }}/${{ github.event.release.tag_name }}.zip
