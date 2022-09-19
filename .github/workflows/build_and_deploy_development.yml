@@ -71,6 +71,7 @@ jobs:
           username: ${{ secrets.USERNAME }}
           password: ${{ secrets.PASSWORD }}
 
+      # https://devdocs.prestashop-project.org/1.7/basics/keeping-up-to-date/upgrade/
       - name: cleanup upload directory
         uses: appleboy/ssh-action@v0.1.5
         with:
@@ -79,7 +80,6 @@ jobs:
           password: ${{ secrets.PASSWORD }}
           port: ${{ secrets.PORT }}
           script_stop: true
-          # https://devdocs.prestashop-project.org/1.7/basics/keeping-up-to-date/upgrade/
           script: |
             cd ${{ env.RELEASE_DIR }}
             mkdir -p /var/www/html/prestashop
@@ -91,14 +91,8 @@ jobs:
             mv ./admin $(basename $(find /var/www/html/prestashop -maxdepth 1 -type d -name "admin*"))
             rm -rf /var/www/html/prestashop/vendor/
             cp -R ./* /var/www/html/prestashop
-
             cd /var/www/html/prestashop
             php install/upgrade/upgrade.php
-
-#            unzip -o ${{ github.event.release.tag_name }}.zip -d /var/www/html/prestashop
-#            chown -R www-data:www-data /var/www/html/prestashop/
-#            chmod -R 755 /var/www/html/prestashop
-#            /etc/init.d/apache2 reload
             rm -rf /var/www/html/prestashop/install/
 
       - name: Release
